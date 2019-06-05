@@ -1,8 +1,9 @@
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 26     // FUSE version specification
 
-#include <fuse.h>
+#include <fuse.h>               // FUSE library; install "libfuse-dev" with apt
+#include <stdio.h>              // NULL
 
-#include "global.h"
+#include "global.h"             // project-global header
 
 static struct fuse_operations op_list = {
     // TODO
