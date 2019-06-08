@@ -20,11 +20,3 @@ add_executable(
     global.c
     ${fuse_impls}
 )
-
-add_executable(
-    fuse_test       # target 2: fuse_test
-    #################
-    test_main.c
-    global.c
-    ${fuse_impls}
-)

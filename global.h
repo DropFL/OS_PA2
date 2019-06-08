@@ -17,6 +17,79 @@
  * TODO: define required structures
  */
 
+/* ==================== Functions Types ==================== */
+
+typedef int (*getattr_type) (const char *path,
+                             struct stat *st);
+
+typedef int (*readlink_type)(const char *path,
+                             char *buffer,
+                             size_t size);
+
+typedef int (*mknod_type)   (const char *path,
+                             mode_t mode,
+                             dev_t dev);
+
+typedef int (*mkdir_type)   (const char *path,
+                             mode_t mode);
+
+typedef int (*unlink_type)  (const char *path);
+
+typedef int (*rmdir_type)   (const char *path);
+
+typedef int (*symlink_type) (const char *target,
+                             const char *path);
+
+typedef int (*rename_type)  (const char *oldpath,
+                             const char *newpath);
+
+typedef int (*link_type)    (const char *target,
+                             const char *path);
+
+typedef int (*chmod_type)   (const char *path,
+                             mode_t mode);
+
+typedef int (*chown_type)   (const char *path,
+                             uid_t owner,
+                             gid_t group);
+
+typedef int (*truncate_type)(const char *path,
+                             off_t length);
+
+typedef int (*open_type)    (const char *path,
+                             struct fuse_file_info *info);
+
+typedef int (*read_type)    (const char *path,
+                             char *buffer,
+                             size_t size,
+                             off_t offset,
+                             struct fuse_file_info *info);
+
+typedef int (*write_type)   (const char *path,
+                             const char *buffer,
+                             size_t size,
+                             off_t offset,
+                             struct fuse_file_info *info);
+
+typedef int (*release_type) (const char *path,
+                             struct fuse_file_info *info);
+
+typedef int (*opendir_type) (const char *path,
+                             struct fuse_file_info *info);
+
+typedef int (*readdir_type) (const char *path,
+                             void* buffer,
+                             fuse_fill_dir_t filler,
+                             off_t offset,
+                             struct fuse_file_info *info);
+
+typedef int (*releasedir_type)(const char *path,
+                             struct fuse_file_info *info);
+
+typedef void* (*init_type)  (struct fuse_conn_info *info);
+
+typedef void (*destroy_type)(void *data);
+
 /* ==================== Functions Defined by FUSE ==================== */
 
 /**
@@ -32,8 +105,7 @@
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_getattr  (const char *path,
-                 struct stat *st);
+extern getattr_type     my_getattr;
 
 /**
  * @brief   심볼릭 링크가 가리키는 파일에 대한 경로를 읽어옵니다.
@@ -46,9 +118,7 @@ int my_getattr  (const char *path,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_readlink (const char *path,
-                 char *buffer,
-                 size_t size);
+extern readlink_type    my_readlink;
 
 /**
  * @brief   파일 노드를 생성하는 함수입니다.
@@ -64,9 +134,7 @@ int my_readlink (const char *path,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_mknod    (const char *path,
-                 mode_t mode,
-                 dev_t dev);
+extern mknod_type       my_mknod;
 
 /**
  * @brief   디렉토리를 생성하는 함수입니다.
@@ -79,8 +147,7 @@ int my_mknod    (const char *path,
  *          성공한 경우 0이 반환됩니다.
  */
 
-int my_mkdir    (const char *path,
-                 mode_t mode);
+extern mkdir_type       my_mkdir;
 
 /**
  * @brief   지정된 파일을 삭제합니다.
@@ -90,7 +157,7 @@ int my_mkdir    (const char *path,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_unlink   (const char *path);
+extern unlink_type      my_unlink;
 
 /**
  * @brief   지정된 디렉토리를 삭제합니다.
@@ -100,7 +167,7 @@ int my_unlink   (const char *path);
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_rmdir    (const char *path);
+extern rmdir_type       my_rmdir;
 
 /**
  * @brief   심볼릭 링크를 생성합니다.
@@ -111,8 +178,7 @@ int my_rmdir    (const char *path);
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_symlink  (const char *target,
-                 const char *path);
+extern symlink_type     my_symlink;
 
 /**
  * @brief   지정된 파일의 이름을 변경합니다.
@@ -123,8 +189,7 @@ int my_symlink  (const char *target,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_rename   (const char *oldpath,
-                 const char *newpath);
+extern rename_type      my_rename;
 
 /**
  * @brief   특정 파일에 대한 하드 링크를 생성합니다.
@@ -135,8 +200,7 @@ int my_rename   (const char *oldpath,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_link     (const char *target,
-                 const char *path);
+extern link_type        my_link;
 
 /**
  * @brief   특정 파일의 권한 비트를 수정합니다.
@@ -148,8 +212,7 @@ int my_link     (const char *target,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_chmod    (const char *path,
-                 mode_t *mode);
+extern chmod_type       my_chmod;
 
 /**
  * @brief   특정 파일의 소유주 및 소유 그룹을 수정합니다.
@@ -164,9 +227,7 @@ int my_chmod    (const char *path,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_chown    (const char *path,
-                 uid_t *owner,
-                 gid_t *group);
+extern chown_type       my_chown;
 
 /**
  * @brief   특정 파일의 내용을 지정한 길이로 수정합니다.
@@ -181,8 +242,7 @@ int my_chown    (const char *path,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0이 반환됩니다.
  */
-int my_truncate (const char *path,
-                 off_t length);
+extern truncate_type    my_truncate;
 
 /**
  * @brief   특정 파일을 여는 작업을 수행합니다.
@@ -200,8 +260,7 @@ int my_truncate (const char *path,
  *          성공한 경우 열린 파일에 해당되는 File Descriptor를 반환합니다.
  *          이 값은 @c info->fh 값으로 지정되어 참조될 수 있습니다.
  */
-int my_open     (const char *path,
-                 struct fuse_file_info *info);
+extern open_type        my_open;
 
 /**
  * @brief   특정 열린 파일을 읽는 작업을 수행합니다.
@@ -217,11 +276,7 @@ int my_open     (const char *path,
  *          성공한 경우 읽어온 데이터의 총 바이트 수를 반환합니다.
  *          이 때, EOF가 포함된 경우 제외합니다.
  */
-int my_read     (const char *path,
-                 char *buffer,
-                 size_t size,
-                 off_t offset,
-                 struct fuse_file_info *info);
+extern read_type        my_read;
 
 /**
  * @brief   특정 열린 파일에 데이터를 쓰는 작업을 수행합니다.
@@ -236,11 +291,7 @@ int my_read     (const char *path,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 쓰여진 데이터의 총 바이트 수를 반환합니다.
  */
-int my_write    (const char *path,
-                 const char *buffer,
-                 size_t size,
-                 off_t offset,
-                 struct fuse_file_info *info);
+extern write_type       my_write;
 
 /**
  * @brief   더 이상 참조가 존재하지 않는 열린 파일의 후처리를 담당합니다.
@@ -250,8 +301,7 @@ int my_write    (const char *path,
  * 
  * @retval  의미가 없습니다. FUSE에서 반환값을 무시합니다.
  */
-int my_release  (const char *path,
-                 struct fuse_file_info *info);
+extern release_type     my_release;
 
 /**
  * @brief   지정한 디렉토리를 여는 함수입니다.
@@ -265,8 +315,7 @@ int my_release  (const char *path,
  *          File Descriptor와 유사한 정수를 반환할 수 있으며,
  *          그 값은 @c open() 의 반환값과 동일하게 취급됩니다.
  */
-int my_opendir  (const char *path,
-                 struct fuse_file_info *info);
+extern opendir_type     my_opendir;
 
 /**
  * @brief   지정한 디렉토리의 정보를 읽는 함수입니다.
@@ -293,11 +342,7 @@ int my_opendir  (const char *path,
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
  *          성공한 경우 0을 반환힙니다.
  */
-int my_readdir  (const char *path,
-                 void* buffer,
-                 fuse_fill_dir_t filler,
-                 off_t offset,
-                 struct fuse_file_info *info);
+extern readdir_type     my_readdir;
 
 /**
  * @brief   참조가 존재하지 않는 열린 디렉토리의 후처리를 담당합니다.
@@ -307,8 +352,7 @@ int my_readdir  (const char *path,
  * 
  * @retval  의미가 없습니다. FUSE에서 반환값을 무시합니다.
  */
-int my_releasedir(const char *path,
-                  struct fuse_file_info *info);
+extern releasedir_type  my_releasedir;
 
 /**
  * @brief   초기화 함수입니다. 마운트 직후 실행됩니다.
@@ -330,11 +374,11 @@ int my_releasedir(const char *path,
  *          그 값은 main에서 fuse_main의 4번째 인자인 @c user_data 입니다.
  *          즉, @c main 함수에서 @c my_init 으로 값을 전달할 수 있습니다.
  */
-void* my_init   (struct fuse_conn_info *info);
+extern init_type        my_init;
 
 /**
  * @brief   후처리 함수입니다. 언마운트 직전 실행됩니다.
  * 
  * @param   data    @c my_init() 에서 반환된 값입니다.
  */
-void my_destroy (void *data);
+extern destroy_type     my_destroy;
