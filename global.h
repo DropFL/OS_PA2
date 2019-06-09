@@ -13,60 +13,83 @@
 
 #include <fuse.h>               // apt로 libfuse-dev을 설치하십시오.
 
-
 /* ==================== Structures ==================== */
 
-#define BLOCK_SIZE 0
-#define N_BLOCKS 15 /* block number each inode has */
-#define NAME_LEN 255 /* maximum size of user, group name */
-#define MAX_USER 65535 /* maximum number of user each group has */
+#define BLOCK_SIZE 4096 // 한 블럭이 저장할 수 있는 데이터의 길이입니다.
+#define N_BLOCKS 15     // 각 Inode가 소유하는 블럭의 개수입니다.
+#define NAME_LEN 255    // 파일, 사용자, 그룹 등의 이름의 최대 길이입니다.
+#define MAX_USER 65535  // 각 그룹에 포함된 사용자의 최대치입니다.
 
 typedef 
 struct user
 {
-    uint8_t u_name[NAME_LEN+1];
+    // @brief   사용자의 이름을 나타내는 문자열 입니다.
+    uint8_t name[NAME_LEN+1];
+    // @brief   논리적으로 사용자를 식별하는 ID입니다.
     uint32_t uid;
-}user;
+} User;
 
 typedef 
 struct group
 {
-    uint8_t g_name[NAME_LEN+1];
+    // @brief   그룹의 이름을 나타내는 문자열 입니다.
+    uint8_t name[NAME_LEN+1];
+    // @brief   논리적으로 그룹을 식별하는 ID입니다.
     uint32_t gid;
-    uint32_t u_list[MAX_USER];
-}group;
+    // @brief   그룹에 속한 사용자 목록입니다. @c user.uid 를 통해 식별합니다.
+    uint32_t users[MAX_USER];
+} Group;
 
 typedef
 struct inode
 {
-    uint16_t i_mode;
-    uint16_t i_uid;
-    uint16_t i_gid;
-    uint32_t i_size;
-    uint16_t i_link_cnt;
-    uint32_t i_block_cnt;
-    uint32_t i_block[N_BLOCKS];
-}inode;
+    // @brief   이 inode에 대한 접근 및 실행 관련 설정이 담긴 16비트 정수입니다.
+    uint16_t mode;
+    // @brief   이 inode의 소유자에 대한 정보입니다.
+    User *user;
+    // @brief   이 inode의 소유 그룹에 대한 정보입니다.
+    Group *group;
+    // @brief   이 inode가 표현하는 파일의 총 크기입니다.
+    uint32_t size;
+    // @brief   이 inode를 참조하는 @c file 의 개수입니다.
+    uint16_t link_cnt;
+    // @brief   이 inode에서 사용하는 블럭의 개수입니다.
+    uint32_t block_cnt;
+    // @brief   이 inode에 속한 블럭의 목록입니다.
+    //          TODO: 블럭 구조체 등으로 변경할 것
+    uint32_t block[N_BLOCKS];
+} Inode;
 
 typedef
 struct file
 {
-    uint16_t f_mode;
-    uint16_t f_ref_cnt;
-    uint32_t f_inode;
+    // @brief   이 파일에 대한 읽기/쓰기 권한입니다.
+    uint16_t mode;
+    // @brief   이 파일을 참조하고 있는 File Descriptor의 개수입니다.
+    uint16_t ref_cnt;
+    // @brief   이 파일의 정보를 담는 Inode 객체입니다.
+    Inode inode;
+    // @brief   이 파일을 읽는/쓰는 위치입니다.
+    //        ? 여기서는 읽는 위치와 쓰는 위치를 별개로 관리합니다.
     uint8_t *r_cur, *w_cur;
-    /* data */
-}file;
+} File;
 
 typedef
 struct d_entry
 {
-    uint32_t d_inode;
-    char d_name[NAME_LEN+1];
-    struct d_entry* d_parent;
-    struct d_entry* d_child;
-    struct d_entry** d_subdir;
-}d_entry;
+    // @brief   이 DirEntry가 가리키는 파일에 대한 Inode 객체입니다.
+    Inode inode;
+    // @brief   사용자에게 보여지고 경로로 취급되는 파일의 이름입니다.
+    char name[NAME_LEN+1];
+    // @brief   이 파일(또는 디렉토리)의 상위 디렉토리에 대한 참조입니다.
+    struct d_entry* parent;
+    // @brief   이 디렉토리의 하위 첫번째 항목에 대한 참조입니다.
+    //          파일의 경우 @c NULL 로 지정됩니다.
+    struct d_entry* child;
+    // @brief   같은 디렉토리에 속한 다른 항목에 대한 참조입니다.
+    //          단일 연결 리스트이며, 모든 항목을 탐색한 경우 이 값은 @c NULL 입니다.
+    struct d_entry* sibling;
+} DirEntry;
 
 /* ==================== Functions Types ==================== */
 
@@ -392,8 +415,8 @@ extern truncate_type    my_truncate;
  *          * O_TRUNC (특정 조건에서만 전달되나, 무시해도 될 듯 합니다.)
  * 
  * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
- *          성공한 경우 열린 파일에 해당되는 File Descriptor를 반환합니다.
- *          이 값은 @c info->fh 값으로 지정되어 참조될 수 있습니다.
+ *          성공한 경우 0을 반환하고, 해당 파일의 File Descriptor가 지정됩니다.
+ *          이 값은 @c info->fh 에 저장되어 이후 작업에서 참조될 수 있습니다.
  */
 extern open_type        my_open;
 
