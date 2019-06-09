@@ -19,76 +19,160 @@
 
 /* ==================== Functions Types ==================== */
 
-typedef int (*getattr_type) (const char *path,
-                             struct stat *st);
+typedef
+int (*getattr_type)
+(
+    const char *path,
+    struct stat *st
+);
 
-typedef int (*readlink_type)(const char *path,
-                             char *buffer,
-                             size_t size);
+typedef
+int (*readlink_type)
+(
+    const char *path,
+    char *buffer,
+    size_t size
+);
 
-typedef int (*mknod_type)   (const char *path,
-                             mode_t mode,
-                             dev_t dev);
+typedef
+int (*mknod_type)
+(
+    const char *path,
+    mode_t mode,
+    dev_t dev
+);
 
-typedef int (*mkdir_type)   (const char *path,
-                             mode_t mode);
+typedef
+int (*mkdir_type)
+(
+    const char *path,
+    mode_t mode
+);
 
-typedef int (*unlink_type)  (const char *path);
+typedef
+int (*unlink_type)
+(
+    const char *path
+);
 
-typedef int (*rmdir_type)   (const char *path);
+typedef
+int (*rmdir_type)
+(
+    const char *path
+);
 
-typedef int (*symlink_type) (const char *target,
-                             const char *path);
+typedef
+int (*symlink_type)
+(
+    const char *target,
+    const char *path
+);
 
-typedef int (*rename_type)  (const char *oldpath,
-                             const char *newpath);
+typedef
+int (*rename_type)
+(
+    const char *oldpath,
+    const char *newpath
+);
 
-typedef int (*link_type)    (const char *target,
-                             const char *path);
+typedef
+int (*link_type)
+(
+    const char *target,
+    const char *path
+);
 
-typedef int (*chmod_type)   (const char *path,
-                             mode_t mode);
+typedef
+int (*chmod_type)
+(
+    const char *path,
+    mode_t mode
+);
 
-typedef int (*chown_type)   (const char *path,
-                             uid_t owner,
-                             gid_t group);
+typedef
+int (*chown_type)
+(
+    const char *path,
+    uid_t owner,
+    gid_t group
+);
 
-typedef int (*truncate_type)(const char *path,
-                             off_t length);
+typedef
+int (*truncate_type)
+(
+    const char *path,
+    off_t length
+);
 
-typedef int (*open_type)    (const char *path,
-                             struct fuse_file_info *info);
+typedef
+int (*open_type)
+(
+    const char *path,
+    struct fuse_file_info *info
+);
 
-typedef int (*read_type)    (const char *path,
-                             char *buffer,
-                             size_t size,
-                             off_t offset,
-                             struct fuse_file_info *info);
+typedef
+int (*read_type)
+(
+    const char *path,
+    char *buffer,
+    size_t size,
+    off_t offset,
+    struct fuse_file_info *info
+);
 
-typedef int (*write_type)   (const char *path,
-                             const char *buffer,
-                             size_t size,
-                             off_t offset,
-                             struct fuse_file_info *info);
+typedef
+int (*write_type)
+(
+    const char *path,
+    const char *buffer,
+    size_t size,
+    off_t offset,
+    struct fuse_file_info *info
+);
 
-typedef int (*release_type) (const char *path,
-                             struct fuse_file_info *info);
+typedef
+int (*release_type)
+(
+    const char *path,
+    struct fuse_file_info *info
+);
 
-typedef int (*opendir_type) (const char *path,
-                             struct fuse_file_info *info);
+typedef
+int (*opendir_type)
+(
+    const char *path,
+    struct fuse_file_info *info
+);
 
-typedef int (*readdir_type) (const char *path,
-                             void* buffer,
-                             fuse_fill_dir_t filler,
-                             off_t offset,
-                             struct fuse_file_info *info);
+typedef
+int (*readdir_type)
+(
+    const char *path,
+    void* buffer,
+    fuse_fill_dir_t filler,
+    off_t offset,
+    struct fuse_file_info *info
+);
 
-typedef int (*releasedir_type)(const char *path,
-                             struct fuse_file_info *info);
+typedef
+int (*releasedir_type)
+(
+    const char *path,
+    struct fuse_file_info *info
+);
 
-typedef void* (*init_type)  (struct fuse_conn_info *info);
+typedef
+void* (*init_type)
+(
+    struct fuse_conn_info *info
+);
 
-typedef void (*destroy_type)(void *data);
+typedef
+void (*destroy_type)
+(
+    void *data
+);
 
 /* ==================== Functions Defined by FUSE ==================== */
 
