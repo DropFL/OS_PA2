@@ -13,9 +13,60 @@
 
 #include <fuse.h>               // apt로 libfuse-dev을 설치하십시오.
 
-/**
- * TODO: define required structures
- */
+
+/* ==================== Structures ==================== */
+
+#define BLOCK_SIZE 0
+#define N_BLOCKS 15 /* block number each inode has */
+#define NAME_LEN 255 /* maximum size of user, group name */
+#define MAX_USER 65535 /* maximum number of user each group has */
+
+typedef 
+struct user
+{
+    uint8_t u_name[NAME_LEN+1];
+    uint32_t uid;
+}user;
+
+typedef 
+struct group
+{
+    uint8_t g_name[NAME_LEN+1];
+    uint32_t gid;
+    uint32_t u_list[MAX_USER];
+}group;
+
+typedef
+struct inode
+{
+    uint16_t i_mode;
+    uint16_t i_uid;
+    uint16_t i_gid;
+    uint32_t i_size;
+    uint16_t i_link_cnt;
+    uint32_t i_block_cnt;
+    uint32_t i_block[N_BLOCKS];
+}inode;
+
+typedef
+struct file
+{
+    uint16_t f_mode;
+    uint16_t f_ref_cnt;
+    uint32_t f_inode;
+    uint8_t *r_cur, *w_cur;
+    /* data */
+}file;
+
+typedef
+struct d_entry
+{
+    uint32_t d_inode;
+    char d_name[NAME_LEN+1];
+    struct d_entry* d_parent;
+    struct d_entry* d_child;
+    struct d_entry** d_subdir;
+}d_entry;
 
 /* ==================== Functions Types ==================== */
 
