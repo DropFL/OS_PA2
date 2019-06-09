@@ -1,0 +1,49 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "mount",
+            "type": "shell",
+            "command": "./main",
+            "args": [
+                "${input:mountPath}"
+            ]
+        },
+        {
+            "label": "mount (stdout enabled)",
+            "type": "shell",
+            "command": "./main",
+            "args": [
+                "-f",
+                "${input:mountPath}"
+            ]
+        },
+        {
+            "label": "unmount",
+            "type": "shell",
+            "command": "fusermount",
+            "args": [
+                "-u",
+                "-V",
+                "${input:unmountPath}"
+            ]
+        },
+    ],
+
+    "inputs": [
+        {
+            "id": "mountPath",
+            "description": "where do you want to mount this FS?",
+            "type": "promptString",
+            "default": "./mnt"
+        },
+        {
+            "id": "unmountPath",
+            "description": "specify the path to FS for unmount.",
+            "type": "promptString",
+            "default": "./mnt"
+        },
+    ]
+}
