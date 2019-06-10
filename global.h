@@ -78,7 +78,7 @@ typedef
 struct d_entry
 {
     // @brief   이 DirEntry가 가리키는 파일에 대한 Inode 객체입니다.
-    Inode inode;
+    Inode *inode;
     // @brief   사용자에게 보여지고 경로로 취급되는 파일의 이름입니다.
     char name[NAME_LEN+1];
     // @brief   이 파일(또는 디렉토리)의 상위 디렉토리에 대한 참조입니다.
@@ -90,6 +90,14 @@ struct d_entry
     //          단일 연결 리스트이며, 모든 항목을 탐색한 경우 이 값은 @c NULL 입니다.
     struct d_entry* sibling;
 } DirEntry;
+
+/* ==================== Default Settings ==================== */
+
+extern DirEntry root;
+
+/* ==================== Default Functions ==================== */
+
+int find_entry (const char* path);
 
 /* ==================== Functions Types ==================== */
 
