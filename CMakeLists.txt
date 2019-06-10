@@ -10,6 +10,10 @@ link_libraries(
     fuse
 )
 
+set(
+    CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/..
+)
+
 # add all *.c files under fuse_impl
 file(GLOB fuse_impls "fuse_impl/*.c")
 
