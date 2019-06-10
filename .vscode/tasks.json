@@ -8,6 +8,7 @@
             "type": "shell",
             "command": "./main",
             "args": [
+                "-s",                   // single thread
                 "${input:mountPath}"
             ]
         },
@@ -16,7 +17,8 @@
             "type": "shell",
             "command": "./main",
             "args": [
-                "-f",
+                "-s",                   // single thread
+                "-d",                   // debug mode (output enabled)
                 "${input:mountPath}"
             ]
         },
