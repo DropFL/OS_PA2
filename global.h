@@ -12,49 +12,47 @@
 #define FUSE_USE_VERSION 26     // FUSE 버전 명시
 
 #include <fuse.h>               // apt로 libfuse-dev을 설치하십시오.
+#include <errno.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
-/* ==================== Structures ==================== */
+/* ==================== Macros ==================== */
 
 #define BLOCK_SIZE 4096 // 한 블럭이 저장할 수 있는 데이터의 길이입니다.
 #define N_BLOCKS 15     // 각 Inode가 소유하는 블럭의 개수입니다.
 #define NAME_LEN 255    // 파일, 사용자, 그룹 등의 이름의 최대 길이입니다.
 #define MAX_USER 65535  // 각 그룹에 포함된 사용자의 최대치입니다.
 
-typedef 
-struct user
-{
-    // @brief   사용자의 이름을 나타내는 문자열 입니다.
-    uint8_t name[NAME_LEN+1];
-    // @brief   논리적으로 사용자를 식별하는 ID입니다.
-    uint32_t uid;
-} User;
+#define IS_OWNER(inode) ((inode)->uid == getuid())
+#define IS_GROUP(inode) ((inode)->gid == getgid())
 
-typedef 
-struct group
-{
-    // @brief   그룹의 이름을 나타내는 문자열 입니다.
-    uint8_t name[NAME_LEN+1];
-    // @brief   논리적으로 그룹을 식별하는 ID입니다.
-    uint32_t gid;
-    // @brief   그룹에 속한 사용자 목록입니다. @c user.uid 를 통해 식별합니다.
-    uint32_t users[MAX_USER];
-} Group;
+/* ==================== Structures ==================== */
 
 typedef
 struct inode
 {
     // @brief   이 inode에 대한 접근 및 실행 관련 설정이 담긴 16비트 정수입니다.
     uint16_t mode;
-    // @brief   이 inode의 소유자에 대한 정보입니다.
-    User *user;
-    // @brief   이 inode의 소유 그룹에 대한 정보입니다.
-    Group *group;
+    // @brief   이 inode의 소유자에 대한 식별자입니다.
+    uid_t uid;
+    // @brief   이 inode의 소유 그룹에 대한 식별자입니다.
+    gid_t gid;
     // @brief   이 inode가 표현하는 파일의 총 크기입니다.
-    uint32_t size;
+    off_t size;
     // @brief   이 inode를 참조하는 @c file 의 개수입니다.
     uint16_t link_cnt;
     // @brief   이 inode에서 사용하는 블럭의 개수입니다.
     uint32_t block_cnt;
+    // @brief   이 inode에 마지막으로 접근한 시간입니다.
+    //          이 파일 시스템에서는 @c open() 에 의해서만 업데이트됩니다.
+    time_t a_time;
+    // @brief   이 inode가 참조하는 블럭을 마지막으로 수정한 시간입니다.
+    //          파일의 메타데이터를 수정한 경우 이 속성은 업데이트되지 않습니다.
+    time_t m_time;
+    // @brief   이 inode의 내용을 마지막으로 수정한 시간입니다.
+    //          파일의 메타데이터를 수정한 경우 이 속성도 업데이트됩니다.
+    time_t c_time;
     // @brief   이 inode에 속한 블럭의 목록입니다.
     //          TODO: 블럭 구조체 등으로 변경할 것
     uint32_t block[N_BLOCKS];
@@ -97,7 +95,20 @@ extern DirEntry root;
 
 /* ==================== Default Functions ==================== */
 
-int find_entry (const char* path);
+/**
+ * @brief   경로를 바탕으로 디렉토리를 탐색합니다.
+ *          이 함수는 디렉토리만 찾을 수 있게 구현되었습니다.
+ * 
+ * @param   path    읽고자 하는 디렉토리의 경로입니다.
+ *                  중요: 이 경로는 반드시 '/'로 끝나야 합니다.
+ * @param   sav     최종 @c DirEntry 를 저장할 위치입니다.
+ *                  즉, 이 포인터가 가리키는 메모리는
+ *                  정상적인 경우 수정됩니다.
+ * 
+ * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
+ *          성공한 경우 0이 반환됩니다.
+ */
+int find_dir (const char *path, DirEntry **sav);
 
 /* ==================== Functions Types ==================== */
 
