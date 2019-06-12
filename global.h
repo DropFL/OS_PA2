@@ -28,8 +28,8 @@
 #define FILE_READ  1
 #define FILE_WRITE 2
 
-#define IS_OWNER(inode) ((inode)->uid == geteuid())
-#define IS_GROUP(inode) ((inode)->gid == getegid())
+#define IS_OWNER(inode) ((inode)->uid == getuid())
+#define IS_GROUP(inode) ((inode)->gid == getgid())
 
 /* ==================== Structures ==================== */
 
@@ -319,19 +319,6 @@ void* (*init_type)
     struct fuse_conn_info *info
 );
 
-typedef
-void (*destroy_type)
-(
-    void *data
-);
-
-typedef
-int (*flush_type)
-(
-    const char *path,
-    struct fuse_file_info *info
-);
-
 /* ==================== Functions Defined by FUSE ==================== */
 
 /**
@@ -617,10 +604,3 @@ extern releasedir_type  my_releasedir;
  *          즉, @c main 함수에서 @c my_init 으로 값을 전달할 수 있습니다.
  */
 extern init_type        my_init;
-
-/**
- * @brief   후처리 함수입니다. 언마운트 직전 실행됩니다.
- * 
- * @param   data    @c my_init() 에서 반환된 값입니다.
- */
-extern destroy_type     my_destroy;

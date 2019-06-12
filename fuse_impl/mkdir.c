@@ -1,9 +1,9 @@
 #include "../global.h"
 #include <stdlib.h>
 
-static int __mknod (const char *path, mode_t mode, dev_t dev)
+static int __mkdir (const char *path, mode_t mode)
 {
-    if (S_ISDIR(mode) || S_ISLNK(mode))
+    if (!S_ISDIR(mode))
         return -EINVAL;
 
     if (!path[1])
@@ -45,7 +45,6 @@ static int __mknod (const char *path, mode_t mode, dev_t dev)
     write_node(dir->inode, entry->name, NAME_LEN, dir->inode->size);
     write_node(dir->inode, (char*)&node, sizeof(Inode*), dir->inode->size);
 
-    node->dev = dev;
     node->uid = getuid();
     node->gid = getgid();
     node->mode = mode;
@@ -54,4 +53,4 @@ static int __mknod (const char *path, mode_t mode, dev_t dev)
     return 0;
 }
 
-mknod_type my_mknod = __mknod;
+mkdir_type my_mkdir = __mkdir;
