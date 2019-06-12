@@ -20,7 +20,7 @@
 /* ==================== Macros ==================== */
 
 #define BLOCK_SIZE 4096 // 한 블럭이 저장할 수 있는 데이터의 길이입니다.
-#define N_BLOCKS 15     // 각 Inode가 소유하는 블럭의 개수입니다.
+#define N_BLOCKS 12     // 각 Inode가 소유하는 실제 데이터를 저장하는 블럭의 개수입니다.
 #define NAME_LEN 255    // 파일, 사용자, 그룹 등의 이름의 최대 길이입니다.
 #define MAX_USER 65535  // 각 그룹에 포함된 사용자의 최대치입니다.
 
@@ -28,6 +28,12 @@
 #define IS_GROUP(inode) ((inode)->gid == getgid())
 
 /* ==================== Structures ==================== */
+
+typedef
+struct block
+{
+    char data[BLOCK_SIZE];
+} Block;
 
 typedef
 struct inode
@@ -54,8 +60,13 @@ struct inode
     //          파일의 메타데이터를 수정한 경우 이 속성도 업데이트됩니다.
     time_t c_time;
     // @brief   이 inode에 속한 블럭의 목록입니다.
-    //          TODO: 블럭 구조체 등으로 변경할 것
-    uint32_t block[N_BLOCKS];
+    Block block[N_BLOCKS];
+    // @brief   단일 간접 블럭입니다.
+    Block* indir;
+    // @brief   이중 간접 블럭입니다.
+    Block* d_indir;
+    // @brief   삼중 간접 블럭입니다.
+    Block* t_indir;
 } Inode;
 
 typedef
@@ -109,6 +120,41 @@ extern DirEntry root;
  *          성공한 경우 0이 반환됩니다.
  */
 int find_dir (const char *path, DirEntry **sav);
+
+/**
+ * @brief   이 모듈 내에서 @c Inode 의 데이터를 읽는 함수입니다.
+ * 
+ * @param   node    읽고자 하는 @c Inode 입니다.
+ * @param   buffer  읽어온 데이터를 저장할 버퍼입니다.
+ * @param   len     데이터를 얼마나 읽어올지 결정합니다.
+ *                  단, 데이터가 충분하지 않은 경우 더 적게 읽힐 수 있습니다.
+ * @param   from    데이터를 어디서부터 읽어올지 결정합니다.
+ *                  처음부터 읽기 위해선 0을 대입하십시오.
+ * 
+ * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
+ *          성공한 경우 읽어온 데이터의 길이가 반환됩니다.
+ * 
+ * @note    이 함수 내에서 권한을 판단합니다.
+ */
+int read_node (Inode *node, char *buffer, off_t len, off_t from);
+
+/**
+ * @brief   이 모듈 내에서 @c Inode 의 블럭 데이터를 수정하는 함수입니다.
+ * 
+ * @param   node    쓰고자 하는 @c Inode 입니다.
+ * @param   buffer  쓸 데이터가 저장된 버퍼입니다.
+ * @param   len     데이터를 얼마나 수정할지 결정합니다.
+ *                  단, 용량이 충분하지 않은 경우 더 적게 쓰일 수 있습니다.
+ * @param   from    데이터를 어디서부터 수정할지 결정합니다.
+ *                  처음부터 쓰기 위해선 0을 대입하십시오.
+ * 
+ * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
+ *          성공한 경우 쓰는 데 성공한 데이터의 길이가 반환됩니다.
+ * 
+ * @note    이 함수 내에서 권한을 판단합니다.
+ *          추가로, 타임 스탬프를 수정하는 작업도 이루어집니다.
+ */
+int write_node (Inode *node, char *buffer, off_t len, off_t from);
 
 /* ==================== Functions Types ==================== */
 
