@@ -38,7 +38,7 @@ static int advance (const char **path, DirEntry **now)
                 path[len+1] = 0;
 
                 // 재귀적으로 탐색
-                int res = find_dir(path, &child);
+                res = find_dir(path, &child);
                 if (res) return res;
             }
 
@@ -82,7 +82,7 @@ int find_dir (const char *path, DirEntry **sav)
 
 static Block* new_block ()
 {
-    return calloc(1, sizeof(Block));
+    return (Block*) calloc(1, sizeof(Block));
 }
 
 static void create_indir (Block* indir, int from, int until)
@@ -96,7 +96,7 @@ static void create_block (Inode *node, int until)
     int prev = node->block_cnt;
     node->block_cnt = until;
 
-    if (until <= INDIR_BOUND) return;
+    if (until < INDIR_BOUND) return;
     
     // 단일 간접 블럭
     until -= INDIR_BOUND;
@@ -114,7 +114,7 @@ static void create_block (Inode *node, int until)
 
     create_indir(node->indir, p_major + 1, u_major);
 
-    if (until <= INDIR_BLOCK_N) return;
+    if (until < INDIR_BLOCK_N) return;
     
     // 이중 간접 블럭
     until -= INDIR_BLOCK_N;
@@ -144,7 +144,7 @@ static void create_block (Inode *node, int until)
         create_indir(DATA_AS(node->d_indir->data, i, Block*), p_bound + 1, u_bound);
     }
     
-    if (until <= D_INDIR_BLOCK_N) return;
+    if (until < D_INDIR_BLOCK_N) return;
 
     // 삼중 간접 블럭
     until -= D_INDIR_BLOCK_N;
@@ -194,19 +194,19 @@ static Block* get_block (Inode *node, int idx, char create)
     }
     
     // 직접 참조되는 블럭들
-    if (idx <= INDIR_BOUND)
+    if (idx < INDIR_BOUND)
         return node->block + idx;
 
     // 단일 간접 블럭
     idx -= INDIR_BOUND;
     
-    if (idx <= INDIR_BLOCK_N)
+    if (idx < INDIR_BLOCK_N)
         return DATA_AS(node->indir->data, idx, Block*);
     
     // 이중 간접 블럭
     idx -= INDIR_BLOCK_N;
     
-    if (idx <= D_INDIR_BLOCK_N) {
+    if (idx < D_INDIR_BLOCK_N) {
         int major = idx / INDIR_BLOCK_N;
         int minor = idx % INDIR_BLOCK_N;
         
@@ -330,6 +330,8 @@ int write_node (Inode *node, char *buffer, off_t len, off_t from)
     
     memmove(blk->data + from, buffer, BLOCK_SIZE - from);
     node->c_time = node->m_time = time(NULL);
+    if (node->size < (blk_begin + 1) * BLOCK_SIZE)
+        node->size = (blk_begin + 1) * BLOCK_SIZE;
     offset += BLOCK_SIZE - from;
 
     // 중간 블럭에 쓰기
@@ -338,6 +340,8 @@ int write_node (Inode *node, char *buffer, off_t len, off_t from)
         blk = get_block(node, blk_n, 0);
         if (blk == NULL) return -EFBIG;
         memmove(blk->data, buffer + offset, BLOCK_SIZE);
+        if (node->size < (blk_n + 1) * BLOCK_SIZE)
+            node->size = (blk_n + 1) * BLOCK_SIZE;
         offset += BLOCK_SIZE;
     }
 
@@ -346,6 +350,9 @@ int write_node (Inode *node, char *buffer, off_t len, off_t from)
     if (blk == NULL) return -EFBIG;
     
     memmove(blk->data + from, buffer + offset, end + 1);
+    if (node->size < blk_end * BLOCK_SIZE + end + 1)
+        node->size = blk_end * BLOCK_SIZE + end + 1;
+    node->c_time = node->m_time = time(NULL);
     offset += end + 1;
 
     return offset;
