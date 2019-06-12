@@ -16,16 +16,20 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <string.h>
 
 /* ==================== Macros ==================== */
 
 #define BLOCK_SIZE 4096 // 한 블럭이 저장할 수 있는 데이터의 길이입니다.
 #define N_BLOCKS 12     // 각 Inode가 소유하는 실제 데이터를 저장하는 블럭의 개수입니다.
-#define NAME_LEN 255    // 파일, 사용자, 그룹 등의 이름의 최대 길이입니다.
+#define NAME_LEN 248    // 파일, 사용자, 그룹 등의 이름의 최대 길이입니다.
 #define MAX_USER 65535  // 각 그룹에 포함된 사용자의 최대치입니다.
+#define MAX_OPEN 1024   // 각 그룹에 포함된 사용자의 최대치입니다.
+#define FILE_READ  1
+#define FILE_WRITE 2
 
-#define IS_OWNER(inode) ((inode)->uid == getuid())
-#define IS_GROUP(inode) ((inode)->gid == getgid())
+#define IS_OWNER(inode) ((inode)->uid == geteuid())
+#define IS_GROUP(inode) ((inode)->gid == getegid())
 
 /* ==================== Structures ==================== */
 
@@ -67,21 +71,9 @@ struct inode
     Block* d_indir;
     // @brief   삼중 간접 블럭입니다.
     Block* t_indir;
+    // @brief   디바이스 파일의 ID입니다.
+    dev_t dev;
 } Inode;
-
-typedef
-struct file
-{
-    // @brief   이 파일에 대한 읽기/쓰기 권한입니다.
-    uint16_t mode;
-    // @brief   이 파일을 참조하고 있는 File Descriptor의 개수입니다.
-    uint16_t ref_cnt;
-    // @brief   이 파일의 정보를 담는 Inode 객체입니다.
-    Inode inode;
-    // @brief   이 파일을 읽는/쓰는 위치입니다.
-    //        ? 여기서는 읽는 위치와 쓰는 위치를 별개로 관리합니다.
-    uint8_t *r_cur, *w_cur;
-} File;
 
 typedef
 struct d_entry
@@ -100,9 +92,21 @@ struct d_entry
     struct d_entry* sibling;
 } DirEntry;
 
+typedef
+struct file
+{
+    // @brief   이 파일에 대한 읽기/쓰기 권한입니다.
+    //          읽기와 쓰기의 2개 비트만 사용합니다.
+    //          주의) 쓰기가 10, 읽기는 01입니다.
+    uint8_t mode;
+    // @brief   이 파일이 가리키는 @c DirEntry 객체입니다.
+    DirEntry *entry;
+} File;
+
 /* ==================== Default Settings ==================== */
 
 extern DirEntry root;
+extern File table[MAX_OPEN];
 
 /* ==================== Default Functions ==================== */
 
@@ -154,7 +158,15 @@ int read_node (Inode *node, char *buffer, off_t len, off_t from);
  * @note    이 함수 내에서 권한을 판단합니다.
  *          추가로, 타임 스탬프를 수정하는 작업도 이루어집니다.
  */
-int write_node (Inode *node, char *buffer, off_t len, off_t from);
+int write_node (Inode *node, const char *buffer, off_t len, off_t from);
+
+/**
+ * @brief   @c table 에 배정된 File Descriptor를 받아오는 함수입니다.
+ * 
+ * @retval  table에 비어있는 위치의 인덱스가 반환됩니다.
+ *          더 이상 파일을 열 수 없는 경우 -1이 반환됩니다.
+ */
+int get_fd ();
 
 /* ==================== Functions Types ==================== */
 
@@ -311,6 +323,13 @@ typedef
 void (*destroy_type)
 (
     void *data
+);
+
+typedef
+int (*flush_type)
+(
+    const char *path,
+    struct fuse_file_info *info
 );
 
 /* ==================== Functions Defined by FUSE ==================== */

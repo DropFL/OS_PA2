@@ -1,5 +1,4 @@
 #include "global.h"
-#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -11,10 +10,25 @@
 
 #define DATA_AS(buf, idx, type) (*(type*)((buf) + (idx * sizeof(type))))
 
+File table[MAX_OPEN] = {};
+
 static int depth = 0;
 
 static int advance (const char **path, DirEntry **now)
 {
+    if (!strncmp(*path, "./", 2))
+    {
+        *path += 2;
+        return 0;
+    }
+
+    if (!strncmp(*path, "../", 3))
+    {
+        *path += 3;
+        *now = (*now)->parent;
+        return 0;
+    }
+
     for (DirEntry* child = (*now)->child; child; child = child -> sibling)
     {
         int len = strlen(child->name);
@@ -67,8 +81,6 @@ int find_dir (const char *path, DirEntry **sav)
 {
     DirEntry *result = &root;
     const char *cur = path + 1;
-
-    printf("path: %s\n", path);
 
     while (*cur) {
         int res = advance(&cur, &result);
@@ -233,9 +245,9 @@ static Block* get_block (Inode *node, int idx, char create)
 int read_node (Inode *node, char *buffer, off_t len, off_t from)
 {
     // 권한 확인
-    if ((IS_OWNER(node) && node->mode & S_IRUSR) ||
-        (IS_GROUP(node) && node->mode & S_IRGRP) ||
-        (                  node->mode & S_IROTH)   ) return -EACCES;
+    if ( !((IS_OWNER(node) && (node->mode & S_IRUSR)) ||
+           (IS_GROUP(node) && (node->mode & S_IRGRP)) ||
+           (                  (node->mode & S_IROTH))   ) ) return -EACCES;
 
     if (from >= node->size) return 0;
 
@@ -293,12 +305,12 @@ int read_node (Inode *node, char *buffer, off_t len, off_t from)
     return offset;
 }
 
-int write_node (Inode *node, char *buffer, off_t len, off_t from)
+int write_node (Inode *node, const char *buffer, off_t len, off_t from)
 {
     // 권한 확인
-    if ((IS_OWNER(node) && node->mode & S_IWUSR) ||
-        (IS_GROUP(node) && node->mode & S_IWGRP) ||
-        (                  node->mode & S_IWOTH)   ) return -EACCES;
+    if ( !((IS_OWNER(node) && (node->mode & S_IWUSR)) ||
+           (IS_GROUP(node) && (node->mode & S_IWGRP)) ||
+           (                  (node->mode & S_IWOTH))   ) ) return -EACCES;
 
     // 마지막 데이터 위치
     off_t end = from + len - 1;
@@ -317,6 +329,8 @@ int write_node (Inode *node, char *buffer, off_t len, off_t from)
         if (blk == NULL) return -EFBIG;
 
         memmove(blk->data + from, buffer, len);
+        if (node->size < blk_begin * BLOCK_SIZE + end + 1)
+            node->size = blk_begin * BLOCK_SIZE + end + 1;
         node->c_time = node->m_time = time(NULL);
         return len;
     }
@@ -356,4 +370,12 @@ int write_node (Inode *node, char *buffer, off_t len, off_t from)
     offset += end + 1;
 
     return offset;
+}
+
+int get_fd ()
+{
+    for (int i = 0; i < MAX_OPEN; i ++)
+        if (table[i].entry == NULL) return i;
+
+    return -1;
 }

@@ -8,9 +8,6 @@ static Inode root_inode =
 
 DirEntry root =
 {
-    .child  = NULL,
-    .parent = NULL,
-    .sibling= NULL,
     .inode  = &root_inode,
     .name   = "",
 };
@@ -24,8 +21,13 @@ static void *__init (struct fuse_conn_info *info)
     root_inode.mode = st->st_mode;
     root_inode.link_cnt = st->st_nlink;
     root_inode.a_time = st->st_atime;
-    root_inode.m_time = st->st_mtime;
-    root_inode.c_time = st->st_ctime;
+    root.parent = &root;
+
+    char self[NAME_LEN] = ".";
+    Inode *node = &root_inode;
+    
+    write_node(&root_inode, self, NAME_LEN, 0);
+    write_node(&root_inode, (char*)&node, sizeof(Inode*), NAME_LEN);
 }
 
 init_type my_init = __init;

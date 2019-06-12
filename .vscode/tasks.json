@@ -9,6 +9,7 @@
             "command": "./main",
             "args": [
                 "-s",                   // single thread
+                "-oauto_unmount",       // unmount on termination
                 "${input:mountPath}"
             ]
         },
@@ -19,6 +20,7 @@
             "args": [
                 "-s",                   // single thread
                 "-d",                   // debug mode (output enabled)
+                "-oauto_unmount",       // unmount on termination
                 "${input:mountPath}"
             ]
         },
@@ -30,7 +32,15 @@
                 "-u",
                 "-V",
                 "${input:unmountPath}"
-            ]
+            ],
+            "presentation": {
+                "echo": false,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
         },
     ],
 
@@ -39,13 +49,13 @@
             "id": "mountPath",
             "description": "where do you want to mount this FS?",
             "type": "promptString",
-            "default": "./mnt"
+            "default": "mnt"
         },
         {
             "id": "unmountPath",
             "description": "specify the path to FS for unmount.",
             "type": "promptString",
-            "default": "./mnt"
+            "default": "mnt"
         },
     ]
 }
