@@ -1,6 +1,3 @@
-#include <stdio.h>              // NULL
-#include <unistd.h>             // getcwd()
-
 #include "global.h"             // project-global header
 
 /* placeholders; remove if implemented */
@@ -30,8 +27,6 @@ static struct fuse_operations op_list = {};
 
 int main (int argc, char* argv[])
 {
-    char cwd[NAME_LEN];
-
     {   // fold it!
         op_list.getattr    = my_getattr;
         op_list.readlink   = my_readlink;
@@ -55,8 +50,10 @@ int main (int argc, char* argv[])
         op_list.init       = my_init;
         op_list.destroy    = my_destroy;
     }
-
-    getcwd(cwd, NAME_LEN);
     
-    return fuse_main(argc, argv, &op_list, cwd);
+    struct stat st;
+    
+    stat(argv[argc - 1], &st);
+    
+    return fuse_main(argc, argv, &op_list, &st);
 }
