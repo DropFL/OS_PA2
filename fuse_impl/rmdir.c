@@ -17,7 +17,7 @@ static int __rmdir (const char *path)
             if ( !((IS_OWNER(dir->inode) && (dir->inode->mode & S_IWUSR)) ||
                    (IS_GROUP(dir->inode) && (dir->inode->mode & S_IWGRP)) ||
                    (                        (dir->inode->mode & S_IWOTH)) )) return -EACCES;
-            if (!child->child) return -ENOTEMPTY;
+            if (child->child) return -ENOTEMPTY;
 
             if (p) p->sibling = child->sibling;
             else   dir->child = child->sibling;
