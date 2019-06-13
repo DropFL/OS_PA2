@@ -3,8 +3,7 @@
 
 static int __mkdir (const char *path, mode_t mode)
 {
-    if (!S_ISDIR(mode))
-        return -EINVAL;
+    if (!S_ISDIR(mode)) mode |= __S_IFDIR;
 
     if (!path[1])
         return -EEXIST;
