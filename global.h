@@ -113,9 +113,10 @@ extern File table[MAX_OPEN];
 /**
  * @brief   경로를 바탕으로 디렉토리를 탐색합니다.
  *          이 함수는 디렉토리만 찾을 수 있게 구현되었습니다.
+ *          또한, 최종적으로 구하는 것은 경로 자체가 아닌,
+ *          가장 마지막 요소 바로 위의 디렉토리입니다.
  * 
  * @param   path    읽고자 하는 디렉토리의 경로입니다.
- *                  중요: 이 경로는 반드시 '/'로 끝나야 합니다.
  * @param   sav     최종 @c DirEntry 를 저장할 위치입니다.
  *                  즉, 이 포인터가 가리키는 메모리는
  *                  정상적인 경우 수정됩니다.
@@ -159,6 +160,28 @@ int read_node (Inode *node, char *buffer, off_t len, off_t from);
  *          추가로, 타임 스탬프를 수정하는 작업도 이루어집니다.
  */
 int write_node (Inode *node, const char *buffer, off_t len, off_t from);
+
+/**
+ * @brief   @c Inode 의 블럭 데이터를 끝까지 0으로 채웁니다.
+ * 
+ * @param   node    값을 지우고자 하는 @c Inode 입니다.
+ * @param   from    데이터를 어디서부터 수정할지 결정합니다.
+ *                  처음부터 채우기 위해선 0을 대입하십시오.
+ * 
+ * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
+ *          성공한 경우 0이 반환됩니다.
+ * 
+ * @note    이 함수는 @c write_node 를 바탕으로 작동합니다.
+ */
+int clear_node (Inode *node, off_t from);
+
+/**
+ * @brief   동적 할당된 @c Inode 의 메모리를 해제합니다.
+ *          여기서 말하는 메모리는 @c Inode는 물론 간접 블럭도 포함합니다.
+ * 
+ * @param   node    대상 @c Inode 입니다.
+ */
+void free_node (Inode *node);
 
 /**
  * @brief   @c table 에 배정된 File Descriptor를 받아오는 함수입니다.
@@ -217,13 +240,6 @@ int (*symlink_type)
 (
     const char *target,
     const char *path
-);
-
-typedef
-int (*rename_type)
-(
-    const char *oldpath,
-    const char *newpath
 );
 
 typedef
@@ -408,17 +424,6 @@ extern rmdir_type       my_rmdir;
  *          성공한 경우 0이 반환됩니다.
  */
 extern symlink_type     my_symlink;
-
-/**
- * @brief   지정된 파일의 이름을 변경합니다.
- * 
- * @param   oldpath 이름 변경 대상 파일의 경로입니다.
- * @param   newpath 새로 지정할 파일의 이름입니다.
- * 
- * @retval  오류가 발생한 경우 그에 해당되는 에러 코드가 반환됩니다.
- *          성공한 경우 0이 반환됩니다.
- */
-extern rename_type      my_rename;
 
 /**
  * @brief   특정 파일에 대한 하드 링크를 생성합니다.

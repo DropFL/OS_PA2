@@ -77,7 +77,7 @@ static int advance (const char **path, DirEntry **now)
     return -ENOENT;
 }
 
-int find_dir (const char *path, DirEntry **sav)
+static int old_find_dir (const char *path, DirEntry **sav)
 {
     DirEntry *result = &root;
     const char *cur = path + 1;
@@ -92,6 +92,24 @@ int find_dir (const char *path, DirEntry **sav)
     return 0;
 }
 
+int find_dir (const char *path, DirEntry **sav)
+{
+    char new_path[NAME_LEN];
+    strcpy(new_path, path);
+
+    char* piv = strrchr(new_path, '/');
+    DirEntry *dir;
+    Inode *node;
+
+    piv[1] = 0;
+
+    int res = old_find_dir(new_path, &dir);
+    if (res) return res;
+
+    *sav = dir;
+    return 0;
+}
+
 static Block* new_block ()
 {
     return (Block*) calloc(1, sizeof(Block));
@@ -99,8 +117,10 @@ static Block* new_block ()
 
 static void create_indir (Block* indir, int from, int until)
 {
-    for (int i = from; i <= until; i ++)
-        DATA_AS(indir->data, i, long) = (long)new_block();
+    for (int i = from; i <= until; i ++) {
+        if (!DATA_AS(indir->data, i, void*))
+            DATA_AS(indir->data, i, long) = (long)new_block();
+    }
 }
 
 static void create_block (Inode *node, int until)
@@ -366,10 +386,27 @@ int write_node (Inode *node, const char *buffer, off_t len, off_t from)
     memmove(blk->data + from, buffer + offset, end + 1);
     if (node->size < blk_end * BLOCK_SIZE + end + 1)
         node->size = blk_end * BLOCK_SIZE + end + 1;
+    node->block_cnt = node->size / BLOCK_SIZE + 1;
     node->c_time = node->m_time = time(NULL);
     offset += end + 1;
 
     return offset;
+}
+
+int clear_node (Inode *node, off_t from)
+{
+    int max_blk = node->size / BLOCK_SIZE;
+    int cur_blk = from / BLOCK_SIZE;
+
+    char empty[BLOCK_SIZE] = {};
+
+    int res = write_node(node, empty, BLOCK_SIZE, from);
+    if (res < 0) return res;
+
+    for (int i = cur_blk + 1; i <= max_blk; i ++)
+        memset(get_block(node, i, 0), 0, BLOCK_SIZE);
+    
+    return 0;
 }
 
 int get_fd ()

@@ -1,14 +1,5 @@
 #include "global.h"             // project-global header
 
-/* placeholders; remove if implemented */
-readlink_type my_readlink = NULL;
-unlink_type my_unlink = NULL;
-rmdir_type my_rmdir = NULL;
-symlink_type my_symlink = NULL;
-rename_type my_rename = NULL;
-link_type my_link = NULL;
-truncate_type my_truncate = NULL;
-
 /* fuse operations */
 static struct fuse_operations op_list = {};
 
@@ -22,7 +13,6 @@ int main (int argc, char* argv[])
         op_list.unlink     = my_unlink;
         op_list.rmdir      = my_rmdir;
         op_list.symlink    = my_symlink;
-        op_list.rename     = my_rename;
         op_list.link       = my_link;
         op_list.chmod      = my_chmod;
         op_list.chown      = my_chown;

@@ -5,24 +5,15 @@ static int __open (const char *path, struct fuse_file_info *info)
     if (!path[1])
         return -EISDIR;
 
-    char new_path[NAME_LEN];
-    strcpy(new_path, path);
+    DirEntry *dir, *child;
 
-    char* piv = strrchr(new_path, '/');
-    DirEntry *dir;
-    Inode *node;
-
-    char c = piv[1];
-    piv[1] = 0;
-
-    int res = find_dir(new_path, &dir);
+    int res = find_dir(path, &dir);
     if (res) return res;
-    
-    piv[1] = c;
 
-    DirEntry *child;
+    const char *leaf = strrchr(path, '/') + 1;
+
     for (child = dir->child; child; child = child->sibling)
-        if (!strcmp(child->name, piv + 1)) break;
+        if (!strcmp(child->name, leaf)) break;
 
     if (!child) return -ENOENT;
 
@@ -37,6 +28,7 @@ static int __open (const char *path, struct fuse_file_info *info)
         table[fd].mode = FILE_READ;
     
     table[fd].entry = child;
+    child->inode->a_time = time(NULL);
 
     return 0;
 }

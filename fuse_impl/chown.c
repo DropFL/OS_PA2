@@ -3,23 +3,15 @@
 static int __chown (const char *path,
                     uid_t owner, gid_t group)
 {
-    char new_path[NAME_LEN];
-    strcpy(new_path, path);
-
-    char* piv = strrchr(new_path, '/');
     DirEntry *dir;
-    Inode *node;
 
-    char c = piv[1];
-    piv[1] = 0;
-
-    int res = find_dir(new_path, &dir);
+    int res = find_dir(path, &dir);
     if (res) return res;
-    
-    piv[1] = c;
+
+    const char *leaf = strrchr(path, '/') + 1;
 
     for (DirEntry* child = dir->child; child; child = child->sibling)
-        if (!strcmp(child->name, piv + 1))
+        if (!strcmp(child->name, leaf))
         {
             if (!IS_OWNER(child->inode)) return -EPERM;
             

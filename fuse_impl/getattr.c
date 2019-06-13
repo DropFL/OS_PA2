@@ -22,23 +22,15 @@ static int __getattr (const char *path, struct stat *st)
         return 0;
     }
 
-    char new_path[NAME_LEN];
-    strcpy(new_path, path);
-
-    char* piv = strrchr(new_path, '/');
     DirEntry *dir;
-    Inode *node;
 
-    char c = piv[1];
-    piv[1] = 0;
-
-    int res = find_dir(new_path, &dir);
+    int res = find_dir(path, &dir);
     if (res) return res;
-    
-    piv[1] = c;
+
+    const char *leaf = strrchr(path, '/') + 1;
 
     for (DirEntry* child = dir->child; child; child = child->sibling)
-        if (!strcmp(child->name, piv + 1))
+        if (!strcmp(child->name, leaf))
         {
             move_info(child->inode, st);
             return 0;

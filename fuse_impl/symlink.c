@@ -1,14 +1,11 @@
 #include "../global.h"
 #include <stdlib.h>
 
-static int __mknod (const char *path, mode_t mode, dev_t dev)
+static int __symlink (const char *target, const char *path)
 {
-    if (S_ISDIR(mode) || S_ISLNK(mode))
-        return -EINVAL;
-
     if (!path[1])
         return -EEXIST;
-    
+
     DirEntry *dir;
 
     int res = find_dir(path, &dir);
@@ -35,14 +32,14 @@ static int __mknod (const char *path, mode_t mode, dev_t dev)
     }
     else dir->child = entry;
 
-    node->dev = dev;
     node->uid = getuid();
     node->gid = getgid();
-    node->mode = mode;
+    node->mode = __S_IFLNK | 0755;
     node->link_cnt = 1;
-    node->block_cnt = 0;
+    
+    write_node(node, target, strlen(target), 0);
 
     return 0;
 }
 
-mknod_type my_mknod = __mknod;
+symlink_type my_symlink = __symlink;
