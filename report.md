@@ -21,6 +21,18 @@
 그러므로 본 과제에서 한 파일에 저장 할 수 있는 데이터의 최대 크기는 12 * 4KB + 512 * 4KB + 512<sup>2</sup> * 4KB + 512<sup>3</sup> * 4KB = 48 KB + 2MB + 1GB + 0.5TB 가 됩니다. 
 
 
+## 구현된 요구사항
+
+- 파일 열기 / 닫기 (open, opendir, )
+- 파일 읽기 / 쓰기 (read, readdir, write)
+- 파일 생성 / 삭제 (mkdir, mknod, release, releasedir)
+- 파일 디스크립터
+- 다단계 디렉토리 생성
+- 에러코드 사용 (EPERM, ENOENT, EACESS, ...)
+- 파일 권한 변경(chmod, chown)
+- 링크 생성, 제거 (link, symlink, unlink)
+
+
 ## Implementation
 
 다음은 `In-memory FUSE` 구현을 위한 구조체와 함수에 대한 설명입니다.
@@ -96,6 +108,19 @@ int read (const char *path, char *buffer,
 ```
 
 ```c
+int link (const char *target, const char *path)
+
+- hard link를 생성합니다.
+```
+
+```c
+
+int readlink (const char *path, char *buffer, size_t size)
+
+- link 파일을 읽어옵니다.
+```
+
+```c
 int readdir (const char *path, void *buffer, fuse_fill_dir_t filler, 
                 off_t offset, struct fuse_file_info *info)
 
@@ -111,6 +136,57 @@ int write (const char *path, const char *buffer, size_t size,
 - 파일이 쓰기 모드가 아닐경우 EINVAL을 반환합니다.
 - 파일 쓰기에 성공할 경우 쓴 데이터의 크기를 반환합니다.
 - write_node 함수를 이용해 블럭에 데이터를 씁니다.
+```
+
+```c
+void *__init (struct fuse_conn_info *info)
+
+- root 디렉토리의 값들을 초기화합니다.
+```
+
+```c
+int getattr (const char *path, struct stat *st)
+
+- path의 파일/디렉토리의 정보를 st에 가져옵니다.
+```
+
+```c
+int release (const char *path, struct fuse_file_info *info)
+
+- path의 파일을 제거합니다. 내부적으로는 파일테이블의 값들을 초기화합니다.
+```
+
+```c
+int releasedir (const char *path, struct fuse_file_info *info)
+
+- path의 디렉토리를 제거합니다. 내부적으로는 파일테이블의 값들을 초기화합니다.
+```
+
+```c
+int rmdir (const char *path)
+
+- 디렉토리를 제거합니다.
+- 비어있지 않을 경우 ENOTEMPTY를 반환합니다.
+- 성공할 경우 0을 반환합니다.
+```
+
+```c
+int truncate (const char *path, off_t length)
+
+- 파일의 내용을 비웁니다.
+- clear_node 함수를 통해 블럭을 비웁니다.
+```
+
+```c
+int symlink (const char *target, const char *path)
+
+- symbolic link를 생성합니다.
+```
+
+```c
+int unlink (const char *path)
+
+- link 파일을 제거합니다.
 ```
 
 ```c
@@ -175,6 +251,13 @@ int read_node (Inode *node, char *buffer, off_t len, off_t from)
 - 데이터를 읽어오는데 성공하면 읽어온 데이터의 크기를 반환합니다.
 
 ```
+
+```c
+int clear_node (Inode *node, off_t from)
+
+- node가 갖고 있는 블럭의 데이터를 지웁니다.
+```
+
 
 ```c
 int write_node (Inode *node, const char *buffer, off_t len, off_t from)
